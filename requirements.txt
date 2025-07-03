@@ -1,0 +1,7 @@
+pocketflow>=0.0.1
+openai>=1.0.0
+pyyaml>=6.0
+db-sqlite3
+# Oracle database support
+cx-Oracle>=8.3.0
+oracledb>=1.4.0
