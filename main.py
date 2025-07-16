@@ -11,18 +11,16 @@ from config import ORACLE_CONFIG, ORACLE_ENV_VARS, DEFAULT_MAX_RETRIES
 warnings.filterwarnings("ignore", message="Flow ends:*", category=UserWarning)
 
 def get_oracle_config_from_env():
-    """Get Oracle configuration from environment variables."""
     config = {}
     for key, env_var in ORACLE_ENV_VARS.items():
         config[key] = os.environ.get(env_var, ORACLE_CONFIG.get(key))
     return config
 
 def parse_arguments():
-    """Parse command line arguments for database configuration and query."""
-    parser = argparse.ArgumentParser(description='Text-to-SQL converter supporting SQLite and Oracle')
+    parser = argparse.ArgumentParser(description='Text-to-SQL converter supporting SQLite, Oracle, and MS SQL Server')
     
     # Database type selection
-    parser.add_argument('--db-type', choices=['sqlite', 'oracle'], default='sqlite',
+    parser.add_argument('--db-type', choices=['sqlite', 'oracle', 'mssql'], default='sqlite',
                         help='Database type (default: sqlite)')
     
     # SQLite options
@@ -38,6 +36,14 @@ def parse_arguments():
     parser.add_argument('--oracle-dsn', default=oracle_env_config.get('dsn'),
                         help='Oracle DSN like host:port/service_name (or set ORACLE_DSN env var)')
     
+    # MS SQL Server options
+    parser.add_argument('--mssql-server', help='MS SQL Server hostname or IP')
+    parser.add_argument('--mssql-database', help='MS SQL Server database name')
+    parser.add_argument('--mssql-user', help='MS SQL Server username')
+    parser.add_argument('--mssql-password', help='MS SQL Server password')
+    parser.add_argument('--mssql-port', type=int, default=1433, help='MS SQL Server port (default: 1433)')
+    parser.add_argument('--mssql-driver', default='ODBC Driver 17 for SQL Server', help='ODBC driver (default: ODBC Driver 17 for SQL Server)')
+    
     # Other options
     parser.add_argument('--max-retries', type=int, default=DEFAULT_MAX_RETRIES,
                         help=f'Maximum debug retry attempts (default: {DEFAULT_MAX_RETRIES})')
@@ -49,7 +55,6 @@ def parse_arguments():
     return parser.parse_args()
 
 def create_db_config(args):
-    """Create database configuration from arguments."""
     if args.db_type == 'sqlite':
         return {"type": "sqlite", "path": args.sqlite_path}
     elif args.db_type == 'oracle':
@@ -68,9 +73,25 @@ def create_db_config(args):
             "password": args.oracle_password,
             "dsn": args.oracle_dsn
         }
+    elif args.db_type == 'mssql':
+        if not all([args.mssql_server, args.mssql_database, args.mssql_user, args.mssql_password]):
+            print("\nError: MS SQL Server requires connection details.")
+            print("Provide them via:")
+            print("  --mssql-server HOST --mssql-database DB --mssql-user USER --mssql-password PASS")
+            print("\nExample:")
+            print("  python main.py --db-type mssql --mssql-server myserver --mssql-database mydb --mssql-user sa --mssql-password mypass \"show me all tables\"")
+            sys.exit(1)
+        return {
+            "type": "mssql",
+            "server": args.mssql_server,
+            "database": args.mssql_database,
+            "user": args.mssql_user,
+            "password": args.mssql_password,
+            "port": args.mssql_port,
+            "driver": args.mssql_driver
+        }
 
 def run_text_to_sql(natural_query, db_config, max_debug_retries=3):
-    # Create database adapter
     try:
         db_adapter = DatabaseAdapter(db_config)
     except Exception as e:

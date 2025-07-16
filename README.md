@@ -1,12 +1,12 @@
 # Text-to-SQL Workflow
 
-A PocketFlow example demonstrating a text-to-SQL workflow that converts natural language questions into executable SQL queries for SQLite and Oracle databases, including an LLM-powered debugging loop for failed queries.
+A PocketFlow example demonstrating a text-to-SQL workflow that converts natural language questions into executable SQL queries for SQLite, Oracle, and MS SQL Server databases, including an LLM-powered debugging loop for failed queries.
 
 - Check out the [Substack Post Tutorial](https://zacharyhuang.substack.com/p/text-to-sql-from-scratch-tutorial) for more!
 
 ## Features
 
--   **Multi-Database Support**: Works with both SQLite and Oracle databases
+-   **Multi-Database Support**: Works with SQLite, Oracle, and MS SQL Server
 -   **Schema Awareness**: Automatically retrieves the database schema to provide context to the LLM.
 -   **LLM-Powered SQL Generation**: Uses an LLM to translate natural language questions into database-specific SQL queries (using YAML structured output).
 -   **Automated Debugging Loop**: If SQL execution fails, an LLM attempts to correct the query based on the error message. This process repeats up to a configurable number of times.
@@ -23,12 +23,20 @@ A PocketFlow example demonstrating a text-to-SQL workflow that converts natural 
 - Supports Oracle-specific SQL syntax
 - Can connect to Oracle XE, Cloud, or Enterprise instances
 
+### MS SQL Server
+- Requires MS SQL Server (on-premises or Azure)
+- Uses ODBC driver (see below)
+- Supports SQL Server-specific SQL syntax
+
 ## Getting Started
 
 1.  **Install Packages:**
     ```bash
     pip install -r requirements.txt
     ```
+    - For MS SQL Server, you may need to install the ODBC driver:
+      - **Windows:** [ODBC Driver 17 for SQL Server](https://docs.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server)
+      - **macOS/Linux:** `brew install unixodbc` and [ODBC Driver 17 for SQL Server](https://docs.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server)
 
 2.  **Set API Key:**
     Set the environment variable for your OpenAI API key.
@@ -49,7 +57,6 @@ A PocketFlow example demonstrating a text-to-SQL workflow that converts natural 
 ### SQLite (Default)
 
 4.  **Run Default Example:**
-    Execute the main script. This will create the sample `ecommerce.db` if it doesn't exist and run the workflow with a default query.
     ```bash
     python main.py
     ```
@@ -57,7 +64,6 @@ A PocketFlow example demonstrating a text-to-SQL workflow that converts natural 
     > Show me the names and email addresses of customers from New York
 
 5.  **Run Custom Query:**
-    Provide your own natural language query as command-line arguments after the script name.
     ```bash
     python main.py "What is the total stock quantity for products in the 'Accessories' category?"
     ```
@@ -65,38 +71,34 @@ A PocketFlow example demonstrating a text-to-SQL workflow that converts natural 
 ### Oracle Database
 
 6.  **Oracle Setup Options:**
+    (see previous instructions)
 
-    **Option A: Command Line Arguments**
-    ```bash
-    python main.py --db-type oracle --oracle-user myuser --oracle-password mypass --oracle-dsn localhost:1521/XE "show me all customers"
-    ```
+### MS SQL Server
 
-    **Option B: Environment Variables**
-    ```bash
-    export ORACLE_USER="your_username"
-    export ORACLE_PASSWORD="your_password"
-    export ORACLE_DSN="host:port/service_name"
-    python main.py --db-type oracle "show me all customers"
-    ```
+7.  **MS SQL Server Setup:**
+    - Make sure you have the ODBC driver installed (see above)
+    - Provide your server, database, user, and password
 
-    **Option C: Configuration File**
-    Edit `config.py` and set your Oracle credentials:
-    ```python
-    ORACLE_CONFIG = {
-        "user": "your_username",
-        "password": "your_password",
-        "dsn": "localhost:1521/XE"
-    }
-    ```
-    Then run:
+    **Example:**
     ```bash
-    python main.py --db-type oracle "show me all customers"
+    python main.py --db-type mssql \
+      --mssql-server myserver \
+      --mssql-database mydb \
+      --mssql-user sa \
+      --mssql-password mypass \
+      "show me all tables"
     ```
+    - Optional: `--mssql-port 1433` (default is 1433)
+    - Optional: `--mssql-driver "ODBC Driver 18 for SQL Server"`
 
-7.  **Oracle Sample Data:**
-    If you have an empty Oracle database, you can populate it with sample data:
+    **Azure SQL Example:**
     ```bash
-    python populate_oracle_db.py your_username localhost:1521/XE
+    python main.py --db-type mssql \
+      --mssql-server myserver.database.windows.net \
+      --mssql-database mydb \
+      --mssql-user myuser \
+      --mssql-password mypass \
+      "show me all tables"
     ```
 
 ### Advanced Usage
@@ -116,24 +118,37 @@ python main.py --max-retries 5 "complex query that might need debugging"
 python main.py --help
 ```
 
-## Oracle Connection Examples
+## MS SQL Server Connection Examples
 
-### Local Oracle XE
+### Local SQL Server
 ```bash
-python main.py --db-type oracle --oracle-user hr --oracle-password welcome --oracle-dsn localhost:1521/XE "show me all tables"
+python main.py --db-type mssql \
+  --mssql-server localhost \
+  --mssql-database AdventureWorks \
+  --mssql-user sa \
+  --mssql-password mypass \
+  "show me all tables"
 ```
 
-### Oracle Cloud
+### Azure SQL
 ```bash
-python main.py --db-type oracle --oracle-user admin --oracle-password MyPass123 --oracle-dsn myhost.oraclecloud.com:1521/FREEPDB1 "describe the schema"
+python main.py --db-type mssql \
+  --mssql-server myserver.database.windows.net \
+  --mssql-database mydb \
+  --mssql-user myuser \
+  --mssql-password mypass \
+  "show me all tables"
 ```
 
-### Using Environment Variables
+### Custom ODBC Driver
 ```bash
-export ORACLE_USER="hr"
-export ORACLE_PASSWORD="welcome"
-export ORACLE_DSN="localhost:1521/XE"
-python main.py --db-type oracle "show me employee information"
+python main.py --db-type mssql \
+  --mssql-server myserver \
+  --mssql-database mydb \
+  --mssql-user sa \
+  --mssql-password mypass \
+  --mssql-driver "ODBC Driver 18 for SQL Server" \
+  "show me all tables"
 ```
 
 ## How It Works

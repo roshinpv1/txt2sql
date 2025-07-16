@@ -10,24 +10,31 @@ SQLITE_DEFAULT_PATH = "ecommerce.db"
 # Oracle Configuration
 # You can set these values here or use environment variables
 ORACLE_CONFIG = {
-    "user": None,  # Set your Oracle username here or use --oracle-user
-    "password": None,  # Set your Oracle password here or use --oracle-password  
-    "dsn": None,  # Set your Oracle DSN here or use --oracle-dsn
+    "user": "your_username",        # Your Oracle username
+    "password": "your_password",    # Your Oracle password  
+    "dsn": "hostname:port/service_name",  # Format: hostname:port/service_name
 }
 
 # Example Oracle configurations:
 # For local Oracle XE:
 # ORACLE_CONFIG = {
-#     "user": "your_username",
-#     "password": "your_password",
+#     "user": "hr",
+#     "password": "welcome",
 #     "dsn": "localhost:1521/XE"
 # }
 
-# For Oracle Cloud:
+# For Oracle Cloud or Remote Server:
 # ORACLE_CONFIG = {
-#     "user": "your_username", 
-#     "password": "your_password",
-#     "dsn": "your_host:1521/your_service_name"
+#     "user": "admin", 
+#     "password": "MyPassword123",
+#     "dsn": "myhost.oraclecloud.com:1521/FREEPDB1"
+# }
+
+# For Corporate Oracle Server:
+# ORACLE_CONFIG = {
+#     "user": "app_user",
+#     "password": "SecurePass456", 
+#     "dsn": "oracle-prod.company.com:1521/ORCL"
 # }
 
 # Environment variable names for Oracle config
